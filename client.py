@@ -103,7 +103,7 @@ async def receive_messages(ws, private_key, public_keys):
 
 # Main client
 async def run_client():
-    ws_url = os.environ.get("WS_URL", "ws://ethan-oise.onrender.com/")
+    ws_url = os.environ.get("WS_URL", "wss://15476c5f7ec8.ngrok-free.app")
     username = os.environ.get("USERNAME", "headless_user")
     peer_username = os.environ.get("PEER", "peer_user")
 
