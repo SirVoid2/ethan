@@ -1,29 +1,33 @@
-import asyncio, websockets, json, os
+import asyncio
+import websockets
+import json
+import os
 
-connected = {}       # username -> websocket
-public_keys = {}     # username -> public key
+connected = {}   # username -> websocket
+public_keys = {} # username -> RSA public key
 
 async def handler(ws):
     try:
         async for msg in ws:
             data = json.loads(msg)
 
-            if data["type"] == "register":
+            if data.get("type") == "register":
                 username = data["username"]
                 connected[username] = ws
                 public_keys[username] = data["public_key"]
 
-                # broadcast updated keys to all clients
+                # broadcast updated keys to all connected clients
                 update = json.dumps({"type": "keys_update", "keys": public_keys})
                 await asyncio.gather(*[c.send(update) for c in connected.values()])
-            
-            elif data["type"] == "message":
-                target = data["to"]
+
+            elif data.get("type") == "message":
+                target = data.get("to")
                 if target in connected:
                     await connected[target].send(msg)
-    except:
+    except Exception:
         pass
     finally:
+        # clean up disconnected clients
         for u, c in list(connected.items()):
             if c == ws:
                 del connected[u]
@@ -31,7 +35,7 @@ async def handler(ws):
                 break
 
 async def main():
-    port = int(os.environ.get("PORT", 8765))  # Render assigns $PORT
+    port = int(os.environ.get("PORT", 8765))  # Render assigns this
     async with websockets.serve(handler, "0.0.0.0", port):
         print(f"Server running on port {port}")
         await asyncio.Future()  # run forever
